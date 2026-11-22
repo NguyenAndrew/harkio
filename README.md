@@ -55,7 +55,7 @@ Watch the install walkthrough on YouTube (narrated with harkio). Click the pictu
 Watch the complete walkthrough on YouTube (narrated with harkio). It covers everything
 below, in the same order. Click the picture below to play it:
 
-[![harkio - Walkthrough](assets/walkthrough-video.jpg)](https://www.youtube.com/watch?v=YyFAZ1Wcypk)
+[![harkio - Walkthrough](assets/walkthrough-video.jpg)](https://youtu.be/nncWIWrdhBQ)
 
 ## Basics
 
@@ -88,11 +88,11 @@ Paragraphs are separated by blank lines.
 A timestamp in square brackets, at the very start of a paragraph, sets when it begins:
 
 ```
-[0:12] This paragraph starts 12 seconds in.
+[0:12] Starts twelve seconds in.
 
-[1:02:30] This one starts 1 hour, 2 minutes and 30 seconds in.
+[1:02:30] Hours work for long videos.
 
-[1:05.5] And this one starts 1 minute and 5.5 seconds in.
+[1:05.5] Decimals work for cues between seconds.
 ```
 
 ### Run it
@@ -124,12 +124,6 @@ This creates `harkio-example/` with an example script showing every feature, a
 
 ## Going further
 
-### Paragraphs without a timestamp
-
-A paragraph without a timestamp plays right after the one before it, with a short
-gap (0.6 seconds). Inside a paragraph, each sentence also gets a small gap
-(0.25 seconds). Change them with `--gap` and `--sentence-gap`.
-
 ### Pauses
 
 `[pause 1s]` or `[pause 400ms]` adds silence anywhere, even in the middle of a sentence:
@@ -139,6 +133,12 @@ Wait for it. [pause 1s] There it is.
 Ready, [pause 400ms] set, [pause 400ms] go!
 And a longer one. [pause 2s] Done.
 ```
+
+### Paragraphs without a timestamp
+
+A paragraph without a timestamp plays right after the one before it, with a short
+gap (0.6 seconds). Inside a paragraph, each sentence also gets a small gap
+(0.25 seconds). Change them with `--gap` and `--sentence-gap`.
 
 ### Speed
 
@@ -151,8 +151,8 @@ The new speed lasts until you change it again, or write `[rate default]`:
 [rate default] And this one is back to normal.
 ```
 
-harkio changes speed by stretching the recording afterwards, so the pitch stays the
-same, even with voices that ignore the Mac's own speed setting.
+harkio changes speed by stretching the recording afterwards, so it works even with
+voices that ignore the Mac's own speed setting.
 
 ### Pronunciations
 
