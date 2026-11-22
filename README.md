@@ -82,6 +82,7 @@ No timestamp: this follows the previous paragraph after a short gap.
   If the paragraph before runs late, it starts late and you get a warning.
 - `[pause 1s]`, `[pause 400ms]`: silence.
 - `[rate 150]`: speed from that point on (words per minute; 175 is normal). `[rate default]` resets.
+- `[read = red]`: say one word your way, just in that spot (see Pronunciations below).
 
 ## Pronunciations
 
@@ -93,6 +94,15 @@ SQL = sequel
 ```
 
 Fixes change the audio only; subtitles keep your spelling.
+
+To fix a word in just one place, write the fix inline as `[word = how to say it]`.
+This is handy when the same word needs to sound different in different places:
+
+```
+I [read = reed] books every day, and yesterday I [read = red] two.
+```
+
+The subtitles show "read" both times. An inline fix beats `pronunciations.txt` for that spot.
 
 ## Other commands
 

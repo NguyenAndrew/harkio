@@ -36,6 +36,7 @@ Script syntax:
   [0:12] Paragraph text...        start this paragraph at 0:12
   [pause 1s]  [pause 400ms]       silence
   [rate 150]  [rate default]      speed change from that point on
+  [read = red]                    say this one word differently (subtitles keep "read")
   # comment                       ignored
   Paragraphs are separated by blank lines.
 
@@ -85,10 +86,14 @@ And this one follows right after that.
 # The subtitles keep your original spelling. Open pronunciations.txt to see the list.
 [0:45] Pronunciation check: Godot, GUI, and SQL should all sound right.
 
+# For one spot only, put the fix inline: [word = how to say it].
+# Handy when the same word is said two ways, and it beats pronunciations.txt.
+[0:52] I [read = reed] a book every day, and yesterday I [read = red] two.
+
 # --- 6. Long times and late cues -------------------------------------------
 # [h:mm:ss] works for long videos. If a paragraph runs past the next
 # timestamp, the next one starts late and harkio prints a warning.
-[0:52] That's every feature. Swap in your own text and timestamps, and you're ready to go.
+[0:58] That's every feature. Swap in your own text and timestamps, and you're ready to go.
 """
 
 EXAMPLE_PRONUNCIATIONS = """\
@@ -118,7 +123,8 @@ What to listen for:
   0:22    a 1-second pause, then a short 400ms pause mid-sentence
   0:30    a slow sentence, a fast one, then normal speed
   0:45    "Godot, GUI, SQL" spoken as "Gaw-doh, gooey, sequel" (subtitles keep the spelling)
-  0:52    the closing line
+  0:52    "read" said two ways: "reed", then "red" (subtitles show "read" both times)
+  0:58    the closing line
 
 Then try:  harkio example.txt --rate 160   (everything a bit slower)
 """
@@ -128,6 +134,7 @@ NEW_TEMPLATE = """\
 # Run:  harkio {filename}
 # [m:ss] starts a paragraph at that time   [pause 1s] adds silence
 # [rate 150] changes speed (175 = normal)   [rate default] resets
+# [read = red] says one word your way, just there (subtitles keep the word)
 # Paragraphs are separated by blank lines. Lines starting with # are ignored.
 
 [0:00] Your opening line goes here.

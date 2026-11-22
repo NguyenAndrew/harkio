@@ -29,6 +29,11 @@ PRONUNCIATIONS
       SQL = sequel
   Fixes apply to the audio only; subtitles keep your original spelling.
 
+  Inline, for one spot only: [word = how to say it] right in the script.
+      I [read = reed] books every day, and yesterday I [read = red] two.
+  The subtitles show the word; the voice says your spelling. An inline fix wins over
+  pronunciations.txt for that spot.
+
 USAGE
   harkio script.txt [-o folder] [--rate 175] [--gap 0.6] [--sentence-gap 0.25] [--voice NAME]
   (--voice is optional; by default the System Voice is used, which is how Siri voices work.)
@@ -50,6 +55,7 @@ CHANNELS = 1
 TIMESTAMP_RE = re.compile(r"^\s*\[(\d+(?::\d+){0,2}(?:\.\d+)?)\]\s*")
 PAUSE_RE = re.compile(r"\[pause\s+(\d+(?:\.\d+)?)\s*(ms|s)?\s*\]", re.IGNORECASE)
 MARKER_RE = re.compile(r"\[(pause|rate)\s+([^\]]+?)\s*\]", re.IGNORECASE)
+INLINE_RE = re.compile(r"\[([^\[\]=]*?)\s*=\s*([^\[\]]*?)\s*\]")
 SENTENCE_RE = re.compile(r"(?<=[.!?…])[\"')\]]*\s+")
 
 
@@ -129,6 +135,26 @@ def apply_pronunciations(text, rules):
     return text
 
 
+# Inline pronunciations ([word = how to say it]) are swapped for placeholder tokens while
+# the script is parsed, so sentence splitting and pronunciations.txt can't touch them.
+# Tokens use private-use characters only, so no word-matching rule can match them.
+INLINE = []                     # (written, spoken) for each token
+TOKEN_RE = re.compile("\ue000(.)\ue001")
+
+
+def _inline_token(m, where):
+    written, spoken = m.group(1).strip(), m.group(2).strip()
+    if not written or not spoken:
+        die(f"{where}: can't read {m.group(0)} - use [word = how to say it]")
+    INLINE.append((written, spoken))
+    return "\ue000" + chr(0xE100 + len(INLINE) - 1) + "\ue001"
+
+
+def expand_inline(text, spoken):
+    """Put inline pronunciations back: the spoken form for audio, the written form for subtitles."""
+    return TOKEN_RE.sub(lambda m: INLINE[ord(m.group(1)) - 0xE100][1 if spoken else 0], text)
+
+
 def parse_script(path):
     with open(path, encoding="utf-8") as f:
         raw = f.read()
@@ -143,6 +169,7 @@ def parse_script(path):
 
     parsed = []
     for i, text in enumerate(blocks, 1):
+        text = INLINE_RE.sub(lambda m: _inline_token(m, f"paragraph {i}"), text)
         start = None
         m = TIMESTAMP_RE.match(text)
         if m:
@@ -328,7 +355,8 @@ def main(argv=None, prog=None):
     with tempfile.TemporaryDirectory() as tmp:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             rendered = list(pool.map(
-                lambda job: render(apply_pronunciations(job[0], rules), tmp, job[1], args.voice), jobs))
+                lambda job: render(expand_inline(apply_pronunciations(job[0], rules), True),
+                                   tmp, job[1], args.voice), jobs))
     rendered.reverse()          # pop() from the end = original order
 
     if True:
@@ -357,7 +385,7 @@ def main(argv=None, prog=None):
                 t0 = start + len(clip) / SAMPLE_WIDTH / SAMPLE_RATE
                 clip += pcm
                 t1 = start + len(clip) / SAMPLE_WIDTH / SAMPLE_RATE
-                subtitles.append((t0, t1, value))
+                subtitles.append((t0, t1, expand_inline(value, False)))
                 if next((k2 for k2, _ in items[k + 1:] if k2 != "rate"), None) == "say":
                     clip += silence(args.sentence_gap)
 
