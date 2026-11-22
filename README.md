@@ -14,7 +14,7 @@ System Voice (including Siri voices). Everything runs offline.
 
 ## Install
 
-Watch the install walkthrough on YouTube (narrated with harkio):
+Watch the install walkthrough on YouTube (narrated with harkio). Click the picture below to play it:
 
 [![How to install harkio](https://img.youtube.com/vi/qdaM55kPdp4/hqdefault.jpg)](https://youtu.be/qdaM55kPdp4)
 
