@@ -6,23 +6,49 @@ System Voice (including Siri voices). Everything runs offline.
 
 ## Requirements
 
-- macOS on an Apple Silicon Mac
-- Python 3 and Apple's command line tools (`xcode-select --install`, which also provides Python 3)
+- An Apple Silicon Mac (M1 or newer)
+- Apple's command line tools, which also provide Python 3. To check if you have
+  them, run `xcode-select -p`. If it prints a folder path, you're all set. If you
+  get an error instead, install them with `xcode-select --install`.
 - macOS 14.2 or later for `harkio record` only
 
 ## Install
 
-```bash
-git clone https://github.com/NguyenAndrew/harkio.git
-cd harkio
-./install.command
-```
+Watch the install walkthrough on YouTube (narrated with harkio):
 
-Or double-click `install.command` in Finder. The installer links `harkio` into
-`~/.local/bin`, adds that to your PATH, and builds the helper tools. Open a new
-Terminal window afterwards so the PATH change takes effect.
+[![How to install harkio](https://img.youtube.com/vi/qdaM55kPdp4/hqdefault.jpg)](https://youtu.be/qdaM55kPdp4)
 
-Set your voice in System Settings > Accessibility > Spoken Content > System Voice.
+1. **Pick your voice.** Open System Settings > Accessibility > Read & Speak and
+   choose a System voice. harkio speaks with whichever voice you choose here.
+   To get more voices, click the info button (ⓘ) next to System voice, then the
+   download button next to a voice; the play button lets you hear it first.
+   (On macOS versions before Tahoe, this setting is under Accessibility > Spoken Content.)
+2. **Get the project from GitHub.** Clone this repository any way you like, then
+   open its folder in Terminal.
+3. **Run the installer:**
+
+   ```bash
+   ./install.command
+   ```
+
+   Or double-click `install.command` in Finder. The installer links `harkio` into
+   `~/.local/bin`, adds that to your PATH, and builds the helper tools.
+4. **Open a new Terminal window** so the PATH change takes effect, then check
+   that it works:
+
+   ```bash
+   harkio --help
+   ```
+
+5. **Try the example:**
+
+   ```bash
+   harkio example
+   cd harkio-example && harkio example.txt
+   ```
+
+   You'll get a timed narration track (`narration.wav`) and subtitles
+   (`narration.srt`) in `harkio-example/example_narration/`.
 
 ## Use
 
