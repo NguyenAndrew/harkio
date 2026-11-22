@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Helper tools built by `harkio setup` from the .swift sources
+/tempo
+/harkio-record
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated narration output and logs
+*_narration/
+harkio-example/
+*.log

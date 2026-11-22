@@ -1,0 +1,10 @@
+# Example narration script. Lines starting with # are notes and aren't read aloud.
+# Run:  ./narrate.sh example_script.txt
+
+[0:00] Welcome back! Today we're setting up a new project in Godot.
+
+[0:06] First, open the project manager. [pause 1s] Then click New Project and give it a name.
+
+This paragraph has no timestamp, so it plays right after the one before it.
+
+[0:25] That's it for this step. See you in the next one!

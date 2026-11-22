@@ -1,0 +1,47 @@
+# Long timing test (about 1:32 of narration).
+# Each [timestamp] matches something that happens on screen at that moment.
+# Run:  ./narrate.sh long_test_script.txt
+
+# --- Intro (title card) ---
+[0:00] Welcome to the narration timing test. Keep an eye on the clock in the corner.
+
+# --- Countdown: each number appears on screen exactly at its cue ---
+[0:08] Three.
+
+[0:10] Two.
+
+[0:12] One.
+
+[0:14] Go!
+
+# --- Mock app: the cursor clicks New Project at exactly 0:24 ---
+[0:17] Here's a mock project manager. Watch the cursor head for the New Project button.
+
+[0:24] Click!
+
+# No timestamp: should follow right after "Click!" while the dialog appears.
+A dialog opens, and the project name gets typed in.
+
+# --- Slow section: the progress bar fills from 0:34 to 0:44 ---
+[0:34] [rate 140] This section is slow on purpose. Watch the progress bar fill up while I speak, nice and steady.
+
+[rate default] And now we're back to normal speed.
+
+# --- List: each item appears on screen at its cue ---
+[0:48] First, the tile map.
+
+[0:51] Second, the player.
+
+[0:54] Third, the crops.
+
+# --- Fast section: four checkmarks tick from 0:58 ---
+[0:58] [rate 210] Now a quick speed run. Save, build, run, and test, all done in a flash!
+
+# --- Pronunciation fixes from pronunciations.txt ---
+[1:05] [rate default] Pronunciation check. Godot, GUI, and SQL should all sound right, while the subtitles keep the original spelling.
+
+# --- Pause marker ---
+[1:14] Pause test. Two seconds of silence, starting now. [pause 2s] And we're back.
+
+# --- Outro ---
+[1:22] That's the end of the test. If every line matched its cue, you're ready to narrate real videos.

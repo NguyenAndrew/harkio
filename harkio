@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+"""harkio - local narration for videos, using your Mac's System Voice."""
+
+import os
+import subprocess
+import sys
+
+VERSION = "1.1.0"
+HOME = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, HOME)
+
+HELP = f"""harkio {VERSION} - turn a narration script into video-ready audio with your Mac's voice
+
+Usage:
+  harkio SCRIPT.txt [options]        narrate a script (same as: harkio narrate ...)
+  harkio narrate SCRIPT.txt [opts]   timed narration.wav + narration.srt + clips/
+  harkio example [FOLDER]            create an example script showing every feature
+  harkio new NAME.txt                start a new script from a template
+  harkio voices                      list voices; how to pick a Siri voice
+  harkio rate-test                   measure how your voice responds to speed changes
+  harkio record OUT.wav [opts]       record what your Mac is playing (Core Audio tap)
+  harkio setup                       build the helper tools (speed changes, recorder)
+  harkio help [COMMAND]              help, e.g. "harkio help narrate"
+  harkio --version
+
+Narrate options:
+  -o, --out FOLDER      output folder (default: <script>_narration next to the script)
+  --rate WPM            overall speed; 175 is normal
+  --gap SECONDS         gap between paragraphs without a timestamp (default 0.6)
+  --sentence-gap SEC    gap between sentences (default 0.25)
+  --voice NAME          a non-Siri voice by name (default: your System Voice)
+  --pron FILE           pronunciation file
+  --jobs N              sentences rendered at once (default: up to 8)
+
+Script syntax:
+  [0:12] Paragraph text...        start this paragraph at 0:12
+  [pause 1s]  [pause 400ms]       silence
+  [rate 150]  [rate default]      speed change from that point on
+  # comment                       ignored
+  Paragraphs are separated by blank lines.
+
+Pronunciations: pronunciations.txt next to the script, or ~/.config/harkio/pronunciations.txt
+                ("Godot = Gaw-doh", one per line; audio only, subtitles keep the spelling)
+"""
+
+EXAMPLE_SCRIPT = """\
+# =====================================================================
+#  harkio example script - every feature in one place.
+#  Run it:   harkio example.txt
+#  Output:   example_narration/narration.wav, narration.srt, clips/
+#
+#  Lines starting with # are comments: they are never read aloud.
+#  Paragraphs are separated by blank lines.
+# =====================================================================
+
+# --- 1. Timestamps -----------------------------------------------------
+# Put [m:ss] at the start of a paragraph to start it at that moment.
+[0:00] Welcome! This is the harkio example script. Each section shows one feature.
+
+# Decimals work too, for cues between whole seconds.
+[0:06.5] This line starts six and a half seconds in.
+
+# --- 2. Paragraphs without a timestamp ---------------------------------
+# These follow the previous paragraph after a short gap (change it with --gap).
+This paragraph has no timestamp, so it plays right after the one before.
+
+And this one follows right after that.
+
+# --- 3. Pauses -----------------------------------------------------------
+# [pause 1s], [pause 1.5s] or [pause 400ms] inserts silence anywhere.
+[0:22] Here comes a one second pause. [pause 1s] And a short one, [pause 400ms] in the middle of a sentence.
+
+# --- 4. Speed --------------------------------------------------------------
+# [rate N] changes speed from that point on. 175 is normal speed.
+# The change carries into later paragraphs until you change it again.
+[0:30] [rate 140] This sentence is slower, for an important step.
+
+[rate 210] This one is faster, for a quick recap.
+
+# [rate default] goes back to normal (or to --rate, if you used it).
+[rate default] And now we're back to normal speed.
+
+# --- 5. Pronunciations -------------------------------------------------
+# Words listed in pronunciations.txt are respelled for the voice only.
+# The subtitles keep your original spelling. Open pronunciations.txt to see the list.
+[0:45] Pronunciation check: Godot, GUI, and SQL should all sound right.
+
+# --- 6. Long times and late cues -------------------------------------------
+# [h:mm:ss] works for long videos. If a paragraph runs past the next
+# timestamp, the next one starts late and harkio prints a warning.
+[0:52] That's every feature. Swap in your own text and timestamps, and you're ready to go.
+"""
+
+EXAMPLE_PRONUNCIATIONS = """\
+# How to say tricky words:   word = how to say it
+# Applies to the audio only; subtitles keep the original spelling.
+# Matching ignores capital letters and only replaces whole words.
+Godot = Gaw-doh
+GUI = gooey
+SQL = sequel
+"""
+
+EXAMPLE_README = """\
+harkio example
+==============
+
+1. Set your voice: System Settings > Accessibility > Spoken Content > System Voice.
+2. Run:            harkio example.txt
+3. Look in example_narration/:
+     narration.wav  the full track - put it at the very start of your video timeline
+     narration.srt  subtitles - import into your editor or YouTube
+     clips/         one file per paragraph
+
+What to listen for:
+  0:00    the first line starts right away
+  0:06.5  a line starting on a half-second cue
+  after   two paragraphs with no timestamp, one after another
+  0:22    a 1-second pause, then a short 400ms pause mid-sentence
+  0:30    a slow sentence, a fast one, then normal speed
+  0:45    "Godot, GUI, SQL" spoken as "Gaw-doh, gooey, sequel" (subtitles keep the spelling)
+  0:52    the closing line
+
+Then try:  harkio example.txt --rate 160   (everything a bit slower)
+"""
+
+NEW_TEMPLATE = """\
+# {title}
+# Run:  harkio {filename}
+# [m:ss] starts a paragraph at that time   [pause 1s] adds silence
+# [rate 150] changes speed (175 = normal)   [rate default] resets
+# Paragraphs are separated by blank lines. Lines starting with # are ignored.
+
+[0:00] Your opening line goes here.
+
+[0:10] Your next line goes here.
+"""
+
+
+def die(msg, code=1):
+    print("harkio: " + msg, file=sys.stderr)
+    sys.exit(code)
+
+
+def cmd_narrate(args):
+    import narrate
+    narrate.main(args, prog="harkio narrate")
+
+
+def cmd_voices(args):
+    try:
+        out = subprocess.run(["say", "-v", "?"], capture_output=True, text=True, check=True).stdout
+    except FileNotFoundError:
+        die("the `say` command wasn't found - harkio needs macOS")
+    names = [line.split("  ")[0].strip() for line in out.splitlines() if line.strip()]
+    print("Voices you can pick with --voice:")
+    for n in names:
+        print("  " + n)
+    print("\nSiri voices aren't in this list. To use one, set it as your System Voice\n"
+          "(System Settings > Accessibility > Spoken Content > System Voice) and run harkio\n"
+          "without --voice.")
+
+
+def cmd_rate_test(args):
+    script = os.path.join(HOME, "rate_test.py")
+    if not os.path.isfile(script):
+        die("rate_test.py is missing from " + HOME)
+    os.execvp(sys.executable, [sys.executable, script] + args)
+
+
+def cmd_record(args):
+    tool = os.path.join(HOME, "harkio-record")
+    if not os.access(tool, os.X_OK):
+        die("the recorder isn't built yet - run: harkio setup")
+    os.execv(tool, [tool] + args)
+
+
+def cmd_setup(args):
+    ok = True
+    for tool, source in [("tempo", "tempo.swift"), ("harkio-record", "harkio-record.swift")]:
+        src = os.path.join(HOME, source)
+        if not os.path.isfile(src):
+            print(f"skipping {tool}: {source} not found")
+            continue
+        print(f"Building {tool}...")
+        try:
+            subprocess.run(["swiftc", "-O", src, "-o", os.path.join(HOME, tool)], check=True)
+        except FileNotFoundError:
+            die("swiftc not found - install Apple's command line tools: xcode-select --install")
+        except subprocess.CalledProcessError:
+            ok = False
+            print(f"  build of {tool} failed (errors above)")
+    print("Setup complete." if ok else "Setup finished with errors.")
+    sys.exit(0 if ok else 1)
+
+
+def write_new(path, text, force):
+    if os.path.exists(path) and not force:
+        die(f"{path} already exists (use --force to overwrite)")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+def cmd_example(args):
+    force = "--force" in args
+    rest = [a for a in args if a != "--force"]
+    folder = os.path.abspath(rest[0] if rest else "harkio-example")
+    os.makedirs(folder, exist_ok=True)
+    write_new(os.path.join(folder, "example.txt"), EXAMPLE_SCRIPT, force)
+    write_new(os.path.join(folder, "pronunciations.txt"), EXAMPLE_PRONUNCIATIONS, force)
+    write_new(os.path.join(folder, "README.txt"), EXAMPLE_README, force)
+    rel = os.path.relpath(folder)
+    print(f"Created {rel}/ with example.txt, pronunciations.txt and README.txt\n")
+    print("Try it:")
+    print(f"  cd {rel} && harkio example.txt")
+
+
+def cmd_new(args):
+    force = "--force" in args
+    rest = [a for a in args if a != "--force"]
+    if not rest:
+        die("usage: harkio new NAME.txt")
+    path = rest[0] if rest[0].endswith(".txt") else rest[0] + ".txt"
+    title = os.path.splitext(os.path.basename(path))[0].replace("_", " ").replace("-", " ")
+    write_new(path, NEW_TEMPLATE.format(title=title, filename=os.path.basename(path)), force)
+    print(f"Created {path}. Edit it, then run:  harkio {path}")
+
+
+COMMANDS = {
+    "narrate": cmd_narrate,
+    "example": cmd_example,
+    "new": cmd_new,
+    "voices": cmd_voices,
+    "rate-test": cmd_rate_test,
+    "record": cmd_record,
+    "setup": cmd_setup,
+}
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help"):
+        print(HELP)
+        return
+    if argv[0] in ("-V", "--version", "version"):
+        print(f"harkio {VERSION}")
+        return
+    if argv[0] == "help":
+        if len(argv) > 1 and argv[1] == "narrate":
+            cmd_narrate(["--help"])
+        elif len(argv) > 1 and argv[1] == "record":
+            cmd_record([])
+        else:
+            print(HELP)
+        return
+    cmd = argv[0]
+    if cmd in COMMANDS:
+        COMMANDS[cmd](argv[1:])
+    elif os.path.isfile(cmd) or cmd.endswith(".txt"):
+        cmd_narrate(argv)        # harkio script.txt ...
+    else:
+        die(f"unknown command '{cmd}'. Run 'harkio --help'.")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(130)

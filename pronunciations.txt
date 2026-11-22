@@ -1,0 +1,5 @@
+# How to say tricky words. Format:  word = how to say it
+# Applies to the audio only; subtitles keep the original spelling.
+Godot = Gaw-doh
+GUI = gooey
+SQL = sequel

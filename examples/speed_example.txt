@@ -1,0 +1,13 @@
+# Example: one video that changes narration speed by section.
+#
+#   [rate 150]      slower from here on (words per minute)
+#   [rate default]  back to the normal speed (or whatever --rate you ran with)
+# A speed change carries into the following paragraphs until you change it again.
+
+[0:00] Welcome back! Today we're setting up a new project in Godot.
+
+[0:06] [rate 150] This part is important, so I'll go slowly. Open the project manager. [pause 1s] Then click New Project, and give it a name.
+
+[rate default] Once that's done, Godot opens your empty project, and you're ready to build.
+
+[0:25] [rate 200] That's it for this step. Like and subscribe, and see you in the next one!
