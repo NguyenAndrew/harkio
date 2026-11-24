@@ -31,8 +31,13 @@ Watch the install walkthrough on YouTube (narrated with harkio). Click the pictu
    ./install.command
    ```
 
-   Or double-click `install.command` in Finder. The installer links `harkio` into
-   `~/.local/bin`, adds that to your PATH, and builds the helper tools.
+   Or double-click `install.command` in Finder. The installer copies harkio to
+   `~/.local/share/harkio` and runs it from there, so AI agents and other apps can use
+   it even when this folder is somewhere macOS protects, like Documents or Downloads.
+   It links `harkio` into `~/.local/bin`, adds that to your PATH for every shell
+   (including the ones agents start), and builds the helper tools.
+
+   After you update this folder (for example with `git pull`), run the installer again.
 4. **Open a new Terminal window** so the PATH change takes effect, then check
    that it works:
 
